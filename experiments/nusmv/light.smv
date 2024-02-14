@@ -1,0 +1,39 @@
+MODULE light
+VAR
+  color : {red, yellow, green};
+  timer : 0..10;
+ASSIGN
+  init(color) := red;
+  init(timer) := 10;
+  next(color) :=
+    case
+      color = red & timer = 0 : green;
+      color = red    : red;
+      color = yellow : red;
+      color = green & timer = 0 : yellow;
+      color = green : green;
+    esac;
+  next(timer) :=
+    case
+      next(color) != color : 0..10;
+      timer = 0            : 0;
+      TRUE                 : timer - 1;
+    esac;
+DEFINE
+  isRed    := color = red;
+  isGreen  := color = green;
+  isYellow := color = yellow;
+LTLSPEC
+  -- green light occurs infinitely often
+  G F isGreen;
+LTLSPEC
+  -- green light does not immediately become red
+  G (isGreen -> ! X isRed);
+LTLSPEC
+  -- green light becomes red eventually after being yellow for some time
+  G (isGreen -> X (isGreen U (isYellow & X (isYellow U isRed))));
+
+MODULE main
+VAR
+  ns : light;
+  -- ew : light;
